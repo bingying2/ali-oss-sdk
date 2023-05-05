@@ -188,6 +188,15 @@ class OssUtil
         return $xml->asXML();
     }
 
+    public static function createFindOneByQueryXmlBody($query){//By by2 文件去重用
+        $xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><MetaQuery></MetaQuery>');
+        $xml->addChild('MaxResults',  1);
+        $xml->addChild('Query',json_encode($query));
+        $xml->addChild('Sort','FileModifiedTime');
+        $xml->addChild('Order','desc');
+        return $xml->asXML();
+    }
+
     /**
      * validate $options
      *

@@ -35,6 +35,7 @@ use OSS\Model\ListMultipartUploadInfo;
 use OSS\Result\ListObjectsResult;
 use OSS\Result\ListObjectsV2Result;
 use OSS\Result\ListPartsResult;
+use OSS\Result\MetaQueryResult;
 use OSS\Result\PutSetDeleteResult;
 use OSS\Result\DeleteObjectsResult;
 use OSS\Result\CopyObjectResult;
@@ -1979,6 +1980,34 @@ class OssClient
         }
         $response = $this->auth($options);
         $result = new AppendResult($response);
+        return $result->getData();
+    }
+
+    public function findOneByQuery($bucket, $query, $options = NULL){//By by2 文件去重用
+        $this->precheckCommon($bucket, NULL, $options, false);
+
+        $options[self::OSS_BUCKET] = $bucket;
+        $options[self::OSS_OBJECT] = '/';
+        $options[self::OSS_METHOD] = self::OSS_HTTP_POST;
+        $options[self::OSS_CONTENT] = OssUtil::createFindOneByQueryXmlBody($query);
+        $options[self::OSS_CONTENT_TYPE] = 'application/xml';
+        $options[self::OSS_SUB_RESOURCE] = 'metaQuery';
+        $options[self::OSS_COMP] = 'query';
+
+        if (!isset($options[self::OSS_LENGTH])) {
+            $options[self::OSS_CONTENT_LENGTH] = strlen($options[self::OSS_CONTENT]);
+        } else {
+            $options[self::OSS_CONTENT_LENGTH] = $options[self::OSS_LENGTH];
+        }
+
+        $is_check_md5 = $this->isCheckMD5($options);
+        if ($is_check_md5) {
+            $content_md5 = base64_encode(md5($options[self::OSS_CONTENT], true));
+            $options[self::OSS_CONTENT_MD5] = $content_md5;
+        }
+
+        $response = $this->auth($options);
+        $result = new MetaQueryResult($response);
         return $result->getData();
     }
 
